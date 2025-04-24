@@ -279,7 +279,10 @@ const totalGemCost = gemOpenCost + gemBuyCost;
 totalCost += totalGemCost;
 
 updateLoss();
-gemCount++;
+if (size === "greater" && desired) {
+  gemCount++;
+}
+
 
 result += `<p><span class='label'>Profession:</span> ${prof}</p>`;
 result += `<p><span class='label'>Cost:</span> ${formatGold(totalGemCost)} (Opening: ${formatGold(gemOpenCost)} + Gem: ${formatGold(gemBuyCost)})</p>`;
