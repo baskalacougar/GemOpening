@@ -446,3 +446,15 @@ setInterval(() => spawnCandies(8), 2500);
 updateDesiredMods();
 toggleDesiredModSelect();
 });
+
+
+document.querySelectorAll('.sidebar a').forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth < 768) {
+      document.querySelector('.sidebar').classList.remove('open');
+    }
+  });
+});
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+}

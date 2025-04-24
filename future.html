@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8" />
   <title>Coming Soon - Baska's Future Feature</title>
   <link rel="stylesheet" href="style.css" />
@@ -34,6 +35,7 @@
   </style>
 </head>
 <body>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰ Menu</button>
   <div class="sidebar">
   <nav>
     <a href="index.html">💎 Gem Opening</a>
@@ -53,6 +55,7 @@
   </div>
 
   <div id="candies"></div>
+  <script src="future.js"></script>
   <script>
     function spawnHearts(count = 15) {
       const heartImages = [

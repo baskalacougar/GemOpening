@@ -241,3 +241,15 @@ document.addEventListener("DOMContentLoaded", () => {
   spawnCandies();
   setInterval(() => spawnCandies(20), 2500);
 });
+
+
+document.querySelectorAll('.sidebar a').forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth < 768) {
+      document.querySelector('.sidebar').classList.remove('open');
+    }
+  });
+});
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+}
