@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Casino Simulator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="sidebar">
+    <nav>
+      <a href="index.html">💎 Gem Opening</a>
+      <a href="casino.html" class="active">🎰 Casino Simulator</a>
+      <a href="future.html">🔮 Future Feature</a>
+    </nav>
+  </div>
+
+  <h1>🎰 Tibian Casino Simulator 🎰</h1>
+
+  <div class="main-container">
+    <div class="left-panel">
+      <div>
+        <div style="text-align: center; margin-bottom: 10px;">
+          <span class="tooltip">ℹ️ Hover for tutorial
+            <span class="tooltiptext">
+              <strong>🎲 High/Low:</strong> Choose Low (1–3) or High (4–6). A dice roll determines the result. Win if your prediction matches the outcome. Payout = stake × 0.8<br><br>
+              <strong>🎯 Number:</strong> Pick a number between 1 and 6. If it matches the roll, you win. Payout = stake × 5.5<br><br>
+              <strong>🂡 Blackjack:</strong> Keep rolling dice (1–6) to reach a total close to 21. Go over 21 and you bust. Closest to 21 wins!
+            </span>
+          </span>
+        </div>
+
+        <label for="depositInput">Enter deposit (GP):</label>
+        <input type="number" id="depositInput" placeholder="e.g. 1000000">
+        <button id="setDepositBtn">Set Deposit</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+
+      <div id="casinoControls" style="display:none; margin-top:20px;">
+        <label for="gameSelect">Choose game:</label>
+        <select id="gameSelect">
+          <option value="hl">High/Low</option>
+          <option value="number">Number</option>
+          <option value="blackjack">Blackjack</option>
+        </select>
+
+        <label for="stakeInput">Stake (GP):</label>
+        <input type="number" id="stakeInput" step="1000" placeholder="e.g. 100000">
+
+        <div id="hlControls" style="margin-top:10px;">
+          <label>Your choice:</label>
+          <select id="hlChoice">
+            <option value="low">Low (1-3)</option>
+            <option value="high">High (4-6)</option>
+          </select>
+          <button id="hlPlayBtn">Play High/Low</button>
+        </div>
+
+        <div id="numberControls" style="display:none; margin-top:10px;">
+          <label>Pick number (1-6):</label>
+          <input type="number" id="numberGuess" min="1" max="6">
+          <button id="numberPlayBtn">Play Number</button>
+        </div>
+
+        <div id="blackjackControls" style="display:none; margin-top:10px;">
+          <button id="bjStartBtn">Start Blackjack</button>
+          <div id="bjGameArea" style="display:none; margin-top:10px;">
+            <p>Player sum: <span id="playerSum">0</span></p>
+            <p>Dealer sum: <span id="dealerSum">0</span></p>
+            <button id="bjHitBtn">Hit</button>
+            <button id="bjStandBtn">Stand</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="output" id="casinoOutput">
+        <p>Balance: <span id="balanceDisplay">0</span> GP</p>
+        <p id="lastResult">Set your deposit to begin.</p>
+        <div>Current Balance: <span id="balanceDisplay">0</span> GP</div>
+<div>Profit/Loss: <span id="profitDisplay">0</span></div>
+
+      </div>
+      <div class="output">
+        <p><strong>Game History (Last 20 results):</strong></p>
+        <ul id="gameHistory"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="candies"></div>
+  <script src="casino.js"></script>
+</body>
+</html>

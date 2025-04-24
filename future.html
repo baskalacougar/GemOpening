@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Coming Soon - Baska's Future Feature</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .center-box {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 100px 30px;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.7);
+      border: 2px dashed #ff69b4;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #ff69b4;
+    }
+
+    .center-box h1 {
+      font-size: 36px;
+      color: #ffccff;
+      margin-bottom: 20px;
+    }
+
+    .center-box p {
+      font-size: 18px;
+      color: #ffe6f2;
+      line-height: 1.6;
+    }
+
+    #candies .candy {
+      opacity: 0.2;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+  <nav>
+    <a href="index.html">💎 Gem Opening</a>
+    <a href="casino.html">🎰 Casino Simulator</a>
+    <a href="future.html" class="active">🔮 Future Feature</a>
+  </nav>
+</div>
+
+  <div class="center-box">
+    <h1>🚧 This page is under construction 🚧</h1>
+    <p>
+      This website is still being developed, but it's coming soon!<br />
+      In the meantime, you can find me in <strong>Tibia</strong> as <span style="color: #ffb6d1;">Baska La Cougar</span><br />
+      or on <strong>Discord</strong> under the same name.<br /><br />
+      If you have fun ideas or feedback, feel free to reach out!
+    </p>
+  </div>
+
+  <div id="candies"></div>
+  <script>
+    function spawnHearts(count = 15) {
+      const heartImages = [
+        'https://img.icons8.com/emoji/48/red-heart.png',
+        'https://img.icons8.com/emoji/48/purple-heart.png',
+        'https://img.icons8.com/emoji/48/sparkling-heart.png',
+        'https://img.icons8.com/emoji/48/heart-with-arrow.png'
+      ];
+
+      for (let i = 0; i < count; i++) {
+        const heart = document.createElement('div');
+        heart.classList.add('candy');
+
+        const img = heartImages[Math.floor(Math.random() * heartImages.length)];
+        heart.style.backgroundImage = `url(${img})`;
+
+        const size = Math.random() * 16 + 24;
+        heart.style.width = `${size}px`;
+        heart.style.height = `${size}px`;
+
+        heart.style.left = `${Math.random() * 100}vw`;
+        heart.style.top = `-${Math.random() * 60 + 20}px`;
+        heart.style.animationDuration = `${5 + Math.random() * 4}s`;
+        heart.style.animationDelay = `${Math.random() * 2}s`;
+
+        document.getElementById("candies").appendChild(heart);
+        setTimeout(() => heart.remove(), 10000);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      spawnHearts();
+      setInterval(() => spawnHearts(10), 2500);
+    });
+  </script>
+</body>
+</html>
