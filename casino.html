@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
   <title>Casino Simulator</title>
@@ -60,7 +61,7 @@
 
         <div id="numberControls" style="display:none; margin-top:10px;">
           <label>Pick number (1-6):</label>
-          <input type="number" id="numberGuess" min="1" max="6">
+          <input type="number" id="numberGuess" min="1" max="6" placeholder="2">
           <button id="numberPlayBtn">Play Number</button>
         </div>
 
@@ -77,16 +78,18 @@
     </div>
 
     <div class="right-panel">
-      <div class="output" id="casinoOutput">
-        <p>Balance: <span id="balanceDisplay">0</span> GP</p>
-        <p id="lastResult">Set your deposit to begin.</p>
-<div>Profit/Loss: <span id="profitDisplay">0</span></div>
+      <div class="balance-box">
+        <p><strong>Balance:</strong> <span id="balanceDisplay">0</span> GP</p>
+        <canvas id="balanceChart"></canvas>
+        <p id="profitDisplay">Profit/Loss: 0 GP</p>
+        <div id="lastResult"></div>
       </div>
-      <div class="output">
-        <p id="gameHistoryTitle">Game History (Last 20 results):</p>
+    
+      <div class="history-box" id="historyBox">
+        <h3 id="gameHistoryTitle">Game History (Last 20 results):</h3>
         <ul id="gameHistory"></ul>
       </div>
-    </div>
+    </div>    
   </div>
 
   <div id="candies"></div>

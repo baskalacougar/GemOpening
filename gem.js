@@ -8,6 +8,7 @@ let greaterCount = 0;
 let desiredGemCount = 0;
 let hitAttempts = [];
 let modalShown = false;
+let perfectSimResults = [];
 
 const thirdMods = {
   General: [
@@ -643,7 +644,7 @@ candy.style.width = `${size}px`;
 candy.style.height = `${size}px`;
 
 candy.style.left = `${Math.random() * 100}vw`;
-candy.style.top = `-${Math.random() * 60 + 20}px`; // start powyżej ekranu
+candy.style.top = `-${Math.random() * 60 + 20}px`; 
 candy.style.animationDuration = `${5 + Math.random() * 4}s`;
 candy.style.animationDelay = `${Math.random() * 2}s`;
 
@@ -652,19 +653,53 @@ setTimeout(() => candy.remove(), 10000);
 }
 }
 
-
-
-
-
-
 document.addEventListener("DOMContentLoaded", () => {
 spawnCandies();
 setInterval(() => spawnCandies(8), 2500);
 updateDesiredMods();
 toggleDesiredModSelect();
 populateChartModSelect();
-});
 
+const simulateBtn = document.getElementById("simulateBtn");
+simulateBtn.addEventListener("click", () => {
+  if (simulateBtn.classList.contains("cooldown")) return;
+
+  const vocation = document.getElementById("perfectProf").value;
+  const size = document.getElementById("perfectGemSize").value;
+  const mod1 = document.getElementById("perfectMod1")?.value || null;
+  const mod2 = document.getElementById("perfectMod2")?.value || null;
+  const mod3 = document.getElementById("perfectMod3")?.value || null;
+
+  simulateBtn.classList.add("cooldown");
+  const originalText = simulateBtn.textContent;
+  simulateBtn.textContent = "Simulating...";
+
+  switchTab('perfect');
+
+  setTimeout(() => {
+    renderPerfectModInputs(mod1, mod2, mod3);
+    simulatePerfectGemAttempts(100, vocation, size, mod1, mod2, mod3);
+    drawPerfectGemChart();
+    simulateBtn.classList.remove("cooldown");
+    simulateBtn.textContent = originalText;
+  }, 50);
+});
+document.getElementById("resetPerfectChartBtn").addEventListener("click", () => {
+  perfectSimResults = [];
+
+  document.getElementById("overallAttempts").textContent = "–";
+  document.getElementById("minAttempt").textContent = "–";
+  document.getElementById("maxAttempt").textContent = "–";
+
+  if (window.perfectChartInstance) {
+    window.perfectChartInstance.destroy();
+    window.perfectChartInstance = null;
+  }
+
+  const ctx = document.getElementById("perfectHitChart")?.getContext("2d");
+  if (ctx) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+});
+});
 
 document.querySelectorAll('.sidebar a').forEach(link => {
   link.addEventListener('click', () => {
@@ -686,6 +721,7 @@ window.addEventListener('resize', () => {
 function switchTab(tab) {
   document.getElementById("gemTab").style.display = tab === "gem" ? "block" : "none";
   document.getElementById("chartsTab").style.display = tab === "charts" ? "block" : "none";
+  document.getElementById("perfectTab").style.display = tab === "perfect" ? "block" : "none";
 
   document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
   document.querySelector(`.tab-button[onclick="switchTab('${tab}')"]`).classList.add("active");
@@ -694,9 +730,11 @@ function switchTab(tab) {
     const selectedMod = document.getElementById("chartModSelect");
     if (selectedMod && selectedMod.value) {
       drawHitChart(selectedMod.value);
-    }    
-  }  
+    }
+  }
 }
+
+
 function openMultipleGems() {
   const countInput = document.getElementById("multiOpenCount");
   const count = parseInt(countInput.value);
@@ -736,3 +774,272 @@ function openMultipleGems() {
 
 
 
+function renderPerfectModInputs(mod1Val = "", mod2Val = "", mod3Val = "") {
+  const vocation = document.getElementById("perfectProf").value;
+  const gemSize = document.getElementById("perfectGemSize").value;
+  const container = document.getElementById("perfectModInputs");
+
+  container.innerHTML = '';
+
+  const modCount = gemSize === 'lesser' ? 1 : gemSize === 'regular' ? 2 : 3;
+
+  for (let i = 1; i <= modCount; i++) {
+    const label = document.createElement("label");
+    label.textContent = `Desired Mod ${i}:`;
+
+    const select = document.createElement("select");
+    select.id = `perfectMod${i}`;
+    select.style.marginBottom = "10px";
+
+    const noneOption = document.createElement("option");
+    noneOption.value = "";
+    noneOption.textContent = "(None)";
+    select.appendChild(noneOption);
+
+    let options = [];
+    if (i === 1) options = mods[vocation];
+    else if (i === 2) options = secondMods;
+    else if (i === 3) options = thirdMods[vocation].concat(thirdMods["General"]);
+
+    options.forEach(mod => {
+      const opt = document.createElement("option");
+      opt.value = mod;
+      opt.textContent = mod;
+      select.appendChild(opt);
+    });
+
+    container.appendChild(label);
+    container.appendChild(document.createElement("br"));
+    container.appendChild(select);
+    container.appendChild(document.createElement("br"));
+
+    if (i === 1 && mod1Val) select.value = mod1Val;
+    if (i === 2 && mod2Val) select.value = mod2Val;
+    if (i === 3 && mod3Val) select.value = mod3Val;
+  }
+
+  if (window.perfectChartInstance) {
+    window.perfectChartInstance.destroy();
+    window.perfectChartInstance = null;
+    const ctx = document.getElementById("perfectHitChart")?.getContext("2d");
+    if (ctx) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  }
+}
+
+
+
+
+document.getElementById("calculatePerfectGemBtn").addEventListener("click", () => {
+  const gemSize = document.querySelector('input[name="perfect-gem-size"]:checked')?.value;
+  const modCount = parseInt(document.querySelector('input[name="perfect-mod-count"]:checked')?.value);
+  const vocation = document.getElementById("perfectVocationSelect")?.value;
+
+  if (!gemSize || !modCount || !vocation) return alert("Please select gem size, number of mods, and vocation.");
+
+  const selectedMods = [];
+  for (let i = 1; i <= modCount; i++) {
+    const modSelect = document.getElementById(`perfectMod${i}`);
+    if (!modSelect || !modSelect.value) return alert(`Please choose mod ${i}`);
+    selectedMods.push(modSelect.value);
+  }
+
+  const mod1Total = mods[vocation].length;
+  const mod2Total = secondMods.length;
+  const mod3Total = (thirdMods[vocation].length + thirdMods["General"].length);
+
+  let probability = 1;
+
+  if (modCount >= 1) probability *= 1 / mod1Total;
+  if (modCount >= 2) probability *= 1 / mod2Total;
+  if (modCount === 3) probability *= 1 / mod3Total;
+
+  const expectedTries = Math.round(1 / probability);
+  const chance50 = Math.ceil(Math.log(1 - 0.5) / Math.log(1 - probability));
+  const chance90 = Math.ceil(Math.log(1 - 0.9) / Math.log(1 - probability));
+  const chance99 = Math.ceil(Math.log(1 - 0.99) / Math.log(1 - probability));
+
+  const resultBox = document.getElementById("perfectResult");
+  resultBox.innerHTML = `
+    <p><strong>Chance:</strong> ${(probability * 100).toFixed(5)}%</p>
+    <p><strong>Expected tries:</strong> ${expectedTries}</p>
+    <p><strong>Tries for 50% chance:</strong> ${chance50}</p>
+    <p><strong>Tries for 90% chance:</strong> ${chance90}</p>
+    <p><strong>Tries for 99% chance:</strong> ${chance99}</p>
+  `;
+});
+
+
+
+function calculatePerfectGemOdds() {
+  const btn = document.getElementById("calculateBtn");
+  if (btn.classList.contains("cooldown")) return;
+
+  btn.classList.add("cooldown");
+  const original = btn.textContent;
+  btn.textContent = "Calculating...";
+  setTimeout(() => {
+    btn.classList.remove("cooldown");
+    btn.textContent = original;
+  }, 3000);
+  const vocation = document.getElementById("perfectProf").value;
+  const size = document.getElementById("perfectGemSize").value;
+
+  const mod1 = document.getElementById("perfectMod1")?.value || null;
+  const mod2 = document.getElementById("perfectMod2")?.value || null;
+  const mod3 = document.getElementById("perfectMod3")?.value || null;
+
+  const pool1 = mods[vocation] || [];
+  const pool2 = secondMods;
+  const pool3 = [...(thirdMods[vocation] || []), ...thirdMods.General];
+
+  let prob = 1;
+
+  if (size === "lesser" && mod1) {
+    prob *= 1 / pool1.length;
+  } else if (size === "regular" && mod1 && mod2) {
+    prob *= (1 / pool1.length) * (1 / pool2.length);
+  } else if (size === "greater" && mod1 && mod2 && mod3) {
+    prob *= (1 / pool1.length) * (1 / pool2.length) * (1 / pool3.length);
+  } else {
+    document.getElementById("perfectResult").innerHTML = "<p>–</p>";
+    document.getElementById("perfectResultBox").style.display = "block";
+    return;
+  }
+
+  const expected = Math.round(1 / prob);
+  const p100 = (prob * 100).toFixed(5);
+  const chance50 = Math.ceil(Math.log(1 - 0.5) / Math.log(1 - prob));
+  const chance90 = Math.ceil(Math.log(1 - 0.9) / Math.log(1 - prob));
+  const chance99 = Math.ceil(Math.log(1 - 0.99) / Math.log(1 - prob));
+
+  document.getElementById("perfectResult").innerHTML = `
+    <p><strong>Chance per attempt:</strong> <span style="color: #8fff8f">${p100}%</span></p>
+    <p><strong>Expected attempts:</strong> <span style="color: #ffd28a">${expected.toLocaleString()}</span></p>
+    <p><strong>For 50% chance:</strong> ~${chance50.toLocaleString()} attempts</p>
+    <p><strong>For 90% chance:</strong> ~${chance90.toLocaleString()} attempts</p>
+    <p><strong>For 99% chance:</strong> ~${chance99.toLocaleString()} attempts</p>
+  `;
+  document.getElementById("perfectResultBox").style.display = "block";
+}
+
+function simulatePerfectGemOpenings() {
+  const btn = document.getElementById("calculateBtn");
+if (btn.classList.contains("cooldown")) return;
+
+btn.classList.add("cooldown");
+btn.textContent = "Simulating...";
+setTimeout(() => {
+  btn.classList.remove("cooldown");
+  btn.textContent = "✨ Simulate 1 Attempt";
+}, 800);
+
+  const vocation = document.getElementById("perfectProf").value;
+  const size = document.getElementById("perfectGemSize").value;
+
+  const mod1 = document.getElementById("perfectMod1")?.value || null;
+  const mod2 = document.getElementById("perfectMod2")?.value || null;
+  const mod3 = document.getElementById("perfectMod3")?.value || null;
+
+  const pool1 = mods[vocation];
+  const pool2 = secondMods;
+  const pool3 = [...thirdMods[vocation], ...thirdMods.General];
+
+  const result = simulatePerfectGemAttempt(mod1, mod2, mod3, pool1, pool2, pool3);
+  perfectSimResults.push(result);
+  document.getElementById("perfectCalcResult").textContent = `Last attempt: ${result} tries`;
+
+  if (perfectSimResults.length > 100) {
+    perfectSimResults.shift();
+  }
+
+  drawPerfectGemChart();
+}
+
+
+function simulatePerfectGemAttempt(mod1, mod2, mod3, pool1, pool2, pool3) {
+  let attempts = 0;
+  while (true) {
+    attempts++;
+    const rand1 = getRandomItemSecure(pool1);
+    const rand2 = getRandomItemSecure(pool2);
+    const rand3 = getRandomItemSecure(pool3);
+
+    const match1 = !mod1 || rand1 === mod1;
+    const match2 = !mod2 || rand2 === mod2;
+    const match3 = !mod3 || rand3 === mod3;
+
+    if (match1 && match2 && match3) return attempts;
+  }
+}
+function simulatePerfectGemAttempts(attempts = 100, vocation, size, mod1, mod2, mod3) {
+  const pool1 = mods[vocation];
+  const pool2 = secondMods;
+  const pool3 = [...thirdMods[vocation], ...thirdMods.General];
+
+  perfectSimResults = [];
+
+  for (let i = 0; i < attempts; i++) {
+    const tries = simulatePerfectGemAttempt(mod1, mod2, mod3, pool1, pool2, pool3);
+    perfectSimResults.push(tries);
+  }
+
+  drawPerfectGemChart();
+}
+
+
+function drawPerfectGemChart() {
+  const ctx = document.getElementById("perfectHitChart").getContext("2d");
+
+  const min = Math.min(...perfectSimResults);
+  const max = Math.max(...perfectSimResults);
+  const avg = perfectSimResults.reduce((a, b) => a + b, 0) / perfectSimResults.length;
+
+  document.getElementById("overallAttempts").textContent = perfectSimResults.length;
+  document.getElementById("minAttempt").textContent = min;
+  document.getElementById("maxAttempt").textContent = max;
+
+  if (!window.perfectChartInstance) {
+    window.perfectChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Attempts per Hit',
+          data: [],
+          borderColor: '#00ffcc',
+          backgroundColor: 'rgba(0,255,204,0.2)',
+          borderWidth: 2,
+          tension: 0.2,
+          pointRadius: 3,
+          pointBackgroundColor: '#00ffaa'
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { labels: { color: '#ffe599' } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => `${ctx.raw} attempts`
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Simulation #', color: '#ffd28a' },
+            ticks: { color: '#ffd28a' }
+          },
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Attempts to Hit', color: '#ffd28a' },
+            ticks: { color: '#ffd28a' }
+          }
+        }
+      }
+    });
+  }
+
+  const chart = window.perfectChartInstance;
+  chart.data.labels = perfectSimResults.map((_, i) => i + 1);
+  chart.data.datasets[0].data = [...perfectSimResults];
+  chart.update();
+}

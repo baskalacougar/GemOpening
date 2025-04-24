@@ -21,8 +21,9 @@
 
   <h1>💎 Opening Gems with <a href="https://guildstats.eu/character?nick=baska%20la%20cougar" target="_blank" class="baska-link">Baska La Cougar</a> 💎</h1>
   <div class="tabs">
-    <button class="tab-button active" onclick="switchTab('gem')">💎 Gem Opening</button>
-    <button class="tab-button" onclick="switchTab('charts')">📊 Charts</button>
+    <button class="tab-button active" onclick="switchTab('gem')">Gem Opening</button>
+    <button class="tab-button" onclick="switchTab('charts')">Charts</button>
+    <button class="tab-button" onclick="switchTab('perfect')">Perfect Gem Opening</button>
   </div>  
   <div id="gemTab" class="tab-content" style="display: block;">
     <div class="main-container">
@@ -61,10 +62,10 @@
         <button onclick="openGem()">Open Gem 💥</button>
         <div style="margin-top: 10px;">
           <label for="multiOpenCount" style="font-size: 14px;">Or open multiple gems at once:</label><br>
-          <small style="color: #999;">Note: If you open more than needed to reveal one (e.g. open multiple - e.g. 125)</small>
+          <small style="color: #999;">Note: If you open more than needed to reveal one (e.g. open multiple - e.g. 100)</small>
           <small style="color: #999;">and it was revealed at the 26th attempt</small>
           <small style="color: #999;">then on this attempt it stopped at 26 opened gemes</small><br>
-          <input type="number" id="multiOpenCount" placeholder="max 100" min="1" max="100" step="1" style="width: 100px; padding: 5px; border-radius: 8px; margin-right: 5px;">
+          <input type="number" id="multiOpenCount" placeholder="max. 100" min="1" max="100" step="1" style="width: 100px; padding: 5px; border-radius: 8px; margin-right: 5px;">
           <button onclick="openMultipleGems()">Open multiple</button>
         </div>        
         <button onclick="resetStats()">🔁 Reset stats</button>
@@ -115,6 +116,68 @@
       <canvas id="hitChart" width="600" height="300" style="margin-top: 30px;"></canvas>
     </div>
   </div>
+  <div id="perfectTab" class="tab-content" style="display: none;">
+    <h2>✨ Perfect Gem Opening</h2>
+    <span class="tooltip">ℹ️ Hover for detailed instruction
+      <span class="tooltiptext">
+        <strong>ℹ️ Whats the idea? : </strong>The simulation presents the overall amount of attempts needed to obtain such gem. 
+        A single attempt is an overall RNG amount after how many times you were lucky enought to open the desired gem with all the included mods. 100 attempts are equal to
+        the amount of 100 times finding the perfect gem. Long story short - if from 100 attemps it says that the lowest attempt value is 70 then it means
+        that you were lucky enough that 1 out of 100 attemps resulted into opening it after 70 gems.<br><br>
+      </span>
+    </span>
+    <div class="main-container">
+      <div class="left-panel">
+        <div>
+          <label><strong>Profession:</strong></label>
+          <select id="perfectProf" onchange="renderPerfectModInputs()">
+            <option value="Knight">Knight</option>
+            <option value="Paladin">Paladin</option>
+            <option value="Druid">Druid</option>
+            <option value="Sorcerer">Sorcerer</option>
+            <option value="Monk">Monk</option>
+          </select>
+        </div>
+  
+        <div>
+          <label><strong>Gem Size:</strong></label>
+          <select id="perfectGemSize" onchange="renderPerfectModInputs()">
+            <option value="lesser">Lesser (1 Mod)</option>
+            <option value="regular">Regular (2 Mods)</option>
+            <option value="greater">Greater (3 Mods)</option>
+          </select>
+        </div>
+  
+        <div id="perfectModInputs" style="margin-top: 20px;"></div>
+  
+
+        <button id="calculateBtn" onclick="simulatePerfectGemOpenings()">✨ Simulate 1 Attempt</button>
+        <button id="simulateBtn">🎲 Simulate 100 Attempts</button>    
+  
+        <div id="perfectCalcResult" style="margin-top: 20px; font-size: 18px;"></div>
+        <div id="perfectResultBox" class="output" style="display:none; margin-top: 20px;">
+          <p><strong>Average attempts needed:</strong> <span id="perfectResult">–</span></p>
+        </div>
+      </div>
+  
+      <div class="right-panel">
+        <div class="output">
+          <button id="resetPerfectChartBtn">🔄 Reset Chart</button>
+          <p><strong>Simulation Chart:</strong></p>
+          <div id="perfectStats" style="text-align:left; margin-bottom: 10px; font-size: 16px; color: #ffd28a;">
+            <p>Overall attempts: <span id="overallAttempts"></span></p>
+            <p>Lowest attempt value: <span id="minAttempt"></span></p>
+            <p>Highest attempt value: <span id="maxAttempt"></span></p>
+          </div>          
+          <div style="position: relative; display: flex; justify-content: flex-end;">
+            <canvas id="perfectHitChart" width="600" height="300"></canvas>
+          </div>                   
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
   
    
   <div id="candies"></div>

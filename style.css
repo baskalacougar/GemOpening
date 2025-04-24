@@ -316,7 +316,14 @@ button:hover {
 #gameHistory {
   text-align: left;
   padding-left: 20px;
+  margin: 0;
+  padding: 0 20px;
+  list-style: none;
+  line-height: 1.6em;
+  height: calc(1.6em * 20);
+  overflow: hidden;
 }
+
 
 #gameHistory li {
   text-align: left;
@@ -441,4 +448,53 @@ button:hover {
   0% { transform: scale(1); }
   50% { transform: scale(1.03); }
   100% { transform: scale(1); }
+}
+
+.balance-chart-wrapper {
+  margin: 20px 0;
+  padding: 10px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 10px;
+}
+
+.balance-box {
+  background: rgba(0, 0, 0, 0.7);
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+}
+
+.history-box {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+#perfectResultBox {
+  background: rgba(255, 215, 0, 0.06);
+  border: 2px solid #ffd700;
+  border-radius: 10px;
+  color: #ffe599;
+  font-size: 18px;
+  text-align: left;
+  padding: 20px 30px;
+  max-width: 500px;
+  margin: 20px auto;
+}
+button.cooldown {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+#resetPerfectChartBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #553311;
+  border: 1px solid #ffd28a;
+  color: #ffe599;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 10;
 }

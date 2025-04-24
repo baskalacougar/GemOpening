@@ -5,6 +5,12 @@ let playerSum = 0, dealerSum = 0;
 const balanceDisplay = document.getElementById('balanceDisplay');
 const profitDisplay = document.getElementById('profitDisplay');
 const gameHistoryList = document.getElementById('gameHistory');
+let balanceHistory = [];
+
+function recordBalance() {
+  balanceHistory.push(balance - initialDeposit);
+  drawBalanceChart();
+}
 
 function updateBalance() {
   balanceDisplay.textContent = balance.toFixed(0);
@@ -60,14 +66,20 @@ document.getElementById('setDepositBtn').addEventListener('click', () => {
     balance = val;
     initialDeposit = val;
     updateBalance();
+    recordBalance();
     document.getElementById('casinoControls').style.display = 'block';
     document.getElementById('lastResult').textContent = 'Choose a game and stake.';
   }
 });
 
 document.getElementById('resetBtn').addEventListener('click', () => {
+  balanceHistory = [];
+if (window.balanceChartInstance) {
+  window.balanceChartInstance.destroy();
+}
   balance = 0;
   updateBalance();
+  recordBalance();
   document.getElementById('casinoControls').style.display = 'none';
   document.getElementById('depositInput').value = '';
   document.getElementById('lastResult').textContent = 'Balance reset.';
@@ -92,15 +104,18 @@ document.getElementById('hlPlayBtn').addEventListener('click', () => {
   const choice = document.getElementById('hlChoice').value;
   const roll = Math.floor(Math.random() * 6) + 1;
   const win = (choice === 'low' && roll <= 3) || (choice === 'high' && roll >= 4);
+  
   if (win) {
     const profit = stake * 0.8;
     balance += profit;
     updateBalance();
+    recordBalance();
     addHistory(`HL: chose ${choice}, rolled ${roll}, won ${profit.toFixed(0)} GP`);
     updateLastResult(true, roll, profit, 'hl');
   } else {
     balance -= stake;
     updateBalance();
+    recordBalance();   
     addHistory(`HL: chose ${choice}, rolled ${roll}, lost ${stake} GP`);
     updateLastResult(false, roll, stake, 'hl');
   }
@@ -117,11 +132,13 @@ document.getElementById('numberPlayBtn').addEventListener('click', () => {
     const profit = stake * 5.5;
     balance += profit;
     updateBalance();
+    recordBalance();   
     addHistory(`Number: guessed ${guess}, rolled ${roll}, won ${profit.toFixed(0)} GP`);
     updateLastResult(true, roll, profit, 'number');
   } else {
     balance -= stake;
     updateBalance();
+    recordBalance();   
     addHistory(`Number: guessed ${guess}, rolled ${roll}, lost ${stake} GP`);
     updateLastResult(false, roll, stake, 'number');
   }
@@ -155,16 +172,16 @@ document.getElementById('bjHitBtn').addEventListener('click', () => {
   document.getElementById('dealerSum').textContent = dealerSum;
 
   if (playerSum > 21) {
-    balance -= window.bjStake;
-    updateBalance();
+    balance -= window.bjStake;  
     updateLastResult(false, pRoll, window.bjStake, 'blackjack');
     addHistory(`BJ: busted ${playerSum}, lost ${window.bjStake} GP`);
     document.getElementById('bjGameArea').style.display = 'none';
     window.bjStake = 0;
   } else if (dealerSum > 21) {
     const profit = window.bjStake;
-    balance += profit;
+    balance += window.bjStake;
     updateBalance();
+    recordBalance();    
     updateLastResult(true, dealerSum, profit, 'blackjack');
     addHistory(`BJ: dealer busted ${dealerSum}, won ${profit} GP`);
     document.getElementById('bjGameArea').style.display = 'none';
@@ -186,11 +203,13 @@ document.getElementById('bjStandBtn').addEventListener('click', () => {
     const profit = window.bjStake;
     balance += profit;
     updateBalance();
+    recordBalance(); 
     result = `BJ: stood at ${playerSum}, dealer had ${dealerSum}, won ${profit} GP`;
     updateLastResult(true, dealerSum, profit, 'blackjack');
   } else if (dealerSum > playerSum) {
     balance -= window.bjStake;
     updateBalance();
+    recordBalance();
     result = `BJ: stood at ${playerSum}, dealer had ${dealerSum}, lost ${window.bjStake} GP`;
     updateLastResult(false, dealerSum, window.bjStake, 'blackjack');
   } else {
@@ -259,3 +278,56 @@ window.addEventListener('resize', () => {
     document.querySelector('.sidebar').classList.remove('open');
   }
 });
+
+function drawBalanceChart() {
+  const canvas = document.getElementById('balanceChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  if (!window.balanceChartInstance) {
+    window.balanceChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: balanceHistory.map((_, i) => i + 1),
+        datasets: [{
+          label: 'Balance Over Time',
+          data: [...balanceHistory],
+          borderColor: '#8fff8f',
+          backgroundColor: 'rgba(143, 255, 143, 0.1)',
+          borderWidth: 2,
+          tension: 0.2,
+          pointRadius: 3,
+          pointBackgroundColor: '#baffba'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#ffd28a' } },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.raw.toFixed(0)} GP`
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'GP' },
+            ticks: { color: '#ffd28a' }
+          },
+          x: {
+            title: { display: true, text: 'Game #' },
+            ticks: { color: '#ffd28a' }
+          }
+        }
+      }
+    });
+  } else {
+    const chart = window.balanceChartInstance;
+    chart.data.labels = balanceHistory.map((_, i) => i + 1);
+    chart.data.datasets[0].data = [...balanceHistory];
+    chart.update();
+  }
+}
+
