@@ -1,7 +1,13 @@
 let totalCost = 0;
-let gemCount = 0;
-let mod3Counts = {};
 let lastGemResult = "";
+let mod3Counts = {};
+let modAttemptTrackers = {};
+let lesserCount = 0;
+let regularCount = 0;
+let greaterCount = 0;
+let desiredGemCount = 0;
+let hitAttempts = [];
+let modalShown = false;
 
 const thirdMods = {
   General: [
@@ -9,7 +15,7 @@ const thirdMods = {
 "+0.28% dodge",
 "+2% life leech",
 "+0.8% mana leech",
-"Revelation Mastery – +150 Gift of Life"
+"Revelation Mastery +150 Gift of Life"
 ],
 Knight: [
 "Aug. Avatar of Steel -900s cooldown",
@@ -192,19 +198,19 @@ return array[betterRandomIndex(array.length)];
 }
 
 function closeModal(keepGoing) {
-document.getElementById("modal").style.display = "none";
-if (!keepGoing) {
-stopOpening = true;
-showBaskaExitMessage();
+  document.getElementById("modal").style.display = "none";
 
+  if (!keepGoing) {
+    stopOpening = true;
+    showBaskaExitMessage();
+    setTimeout(() => location.reload(true), 4000);
+  } else {
+    stopOpening = false;
+    desiredGemCount = 0;
+    modalShown = false;
+  }
+}
 
-setTimeout(() => {
-  location.reload(true); 
-}, 4000);
-} else {
-stopOpening = false;
-}
-}
 
 function formatGold(value) {
   if (value >= 1000000) return (value / 1000000) + 'kk';
@@ -237,12 +243,41 @@ function updateDesiredMods() {
   const prof = document.getElementById("profesja").value;
   const select = document.getElementById("desiredMod");
   select.innerHTML = '<option value="">(Null - you are not looking for any particular mod)</option>';
-  [...thirdMods.General, ...thirdMods[prof]].forEach(mod => {
+
+  const allMods = [...thirdMods.General, ...thirdMods[prof]].sort((a, b) => a.localeCompare(b));
+
+  allMods.forEach(mod => {
     const option = document.createElement("option");
     option.textContent = mod;
     select.appendChild(option);
   });
 }
+
+function populateChartModSelect() {
+  const prof = document.getElementById("profesja").value;
+  const select = document.getElementById("chartModSelect");
+  select.innerHTML = "";
+
+  const allMods = [...thirdMods.General, ...thirdMods[prof]].sort((a, b) => a.localeCompare(b));
+
+  allMods.forEach(mod => {
+    const option = document.createElement("option");
+    option.textContent = mod;
+    option.value = mod;
+    select.appendChild(option);
+  });
+
+  if (select.options.length > 0) {
+    select.selectedIndex = 0;
+    drawHitChart(select.value);
+  }
+
+  setTimeout(() => {
+    if (select.value) drawHitChart(select.value);
+  }, 0);
+}
+
+
 
 function toggleDesiredModSelect() {
   const wrapper = document.getElementById("desiredModWrapper");
@@ -250,15 +285,25 @@ function toggleDesiredModSelect() {
   wrapper.style.display = size === "greater" ? "block" : "none";
 }
 function clearAfterDesiredChange() {
-mod3Counts = {}; 
-updateHistory(); 
-document.getElementById("wynik").innerHTML = `<p>Waiting for your move, cutie.</p>`;
-document.getElementById("wynik").classList.remove("highlight");
+  updateHistory();
+  drawHitChart();
+  desiredGemCount = 0;
+  document.getElementById("wynik").classList.remove("highlight");
 }
+
+
+
 let stopOpening = false;
 
-function openGem() {
-if (stopOpening) return;
+function openGem(bypassCooldown = false) {
+  if (!bypassCooldown && openGem.cooldown) return;
+
+  if (!bypassCooldown) {
+    openGem.cooldown = true;
+    setTimeout(() => openGem.cooldown = false, 300);
+  }
+
+  if (stopOpening) return;
 
 const prof = document.getElementById("profesja").value;
 const size = document.getElementById("wielkosc").value;
@@ -279,8 +324,12 @@ const totalGemCost = gemOpenCost + gemBuyCost;
 totalCost += totalGemCost;
 
 updateLoss();
+if (size === "lesser") lesserCount++;
+else if (size === "regular") regularCount++;
+else if (size === "greater") greaterCount++;
+
 if (size === "greater" && desired) {
-  gemCount++;
+  desiredGemCount++;
 }
 
 
@@ -297,30 +346,95 @@ result += `<p><span class='label'>Mod 2:</span> ${secondMod}</p>`;
 
 let thirdMod = "";
 if (size === "greater") {
-let thirdPool = [...thirdMods.General, ...thirdMods[prof]];
-thirdMod = getRandomItemSecure(thirdPool);
+  let allMods = [...thirdMods.General, ...thirdMods[prof]];
+  for (let mod of allMods) {
+    if (!(mod in modAttemptTrackers)) {
+      modAttemptTrackers[mod] = 0;
+    }
+    modAttemptTrackers[mod]++;
+  }
+
+  let thirdPool = [...thirdMods.General, ...thirdMods[prof]];
+  thirdMod = getRandomItemSecure(thirdPool);
+
 result += `<p><span class='label'>Mod 3:</span> ${thirdMod}</p>`;
 
 mod3Counts[thirdMod] = (mod3Counts[thirdMod] || 0) + 1;
 updateHistory();
 
-if (thirdMod === desired) {
+let attemptsBeforeHit = desiredGemCount;
+let hit = false;
+
+if (desired && thirdMod === desired && !modalShown) {
+  modalShown = true;
+  stopOpening = true;
   outputBox.classList.add("highlight");
   launchFireworks();
-  showModal(); //
+  showModal(attemptsBeforeHit);
 }
+
+
+hitAttempts.push({
+  mod: thirdMod,
+  attempts: modAttemptTrackers[thirdMod]
+});
+modAttemptTrackers[thirdMod] = 0;
+
+
+
+
 }
 
 result += `<p><span class='label'>Total cost:</span> ${formatGold(totalCost)}</p>`;
-result += `<p><span class='label'>Gems opened:</span> ${gemCount}</p>`;
-outputBox.innerHTML = result;
-lastGemResult = result;
+result += `<p><span class='label'>Lesser opened:</span> ${lesserCount}</p>`;
+result += `<p><span class='label'>Regular opened:</span> ${regularCount}</p>`;
+result += `<p><span class='label'>Greater opened:</span> ${greaterCount}</p>`;
+if (desired) {
+  result += `<p><span class='label'>Attempts for desired mod:</span> ${desiredGemCount}</p>`;
 }
 
-function showModal() {
-const textBox = document.querySelector("#modal h2");
-textBox.innerHTML = `🎯 You've hit your desired gem after <span style="color: gold;">${gemCount}</span> attempts!`;
-document.getElementById("modal").style.display = "flex";
+outputBox.innerHTML = result;
+lastGemResult = result;
+if (hitAttempts.length > 0) {
+  drawHitChart();
+}
+const selectedMod = document.getElementById("chartModSelect").value;
+drawHitChart(selectedMod);
+}
+function resetStats() {
+  if (!confirm("Are you sure you want to reset all stats, attempts and drops?")) return;
+
+  hitAttempts = [];
+  mod3Counts = {};
+  desiredGemCount = 0;
+  lesserCount = 0;
+  regularCount = 0;
+  greaterCount = 0;
+  totalCost = 0;
+  lastGemResult = "";
+  document.getElementById("desiredMod").selectedIndex = 0;
+document.getElementById("chartModSelect").selectedIndex = 0;
+document.getElementById("wielkosc").value = "lesser";
+toggleDesiredModSelect();
+  document.getElementById("modHistory").innerHTML = "";
+  document.getElementById("wynik").innerHTML = `<p class="centered-text">Try your luck!</p>`;
+  document.getElementById("lastHitCount").textContent = "–";
+  document.getElementById("averageHitCount").textContent = "–";
+  document.getElementById("multiOpenCount").value = "";
+
+  if (window.hitChartInstance) {
+    window.hitChartInstance.destroy();
+    window.hitChartInstance = null;
+  }
+
+  updateLoss();
+  modalShown = false;
+}
+
+function showModal(attempts) {
+  const textBox = document.querySelector("#modal h2");
+  textBox.innerHTML = `🎯 You've hit your desired gem after <span style="color: gold;">${attempts}</span> greater attempts!`;
+  document.getElementById("modal").style.display = "flex";
 }
 
 
@@ -329,7 +443,8 @@ const list = document.getElementById("modHistory");
 const desired = document.getElementById("desiredMod").value;
 list.innerHTML = "";
 
-for (const [mod, count] of Object.entries(mod3Counts)) {
+const sortedMods = Object.entries(mod3Counts).sort((a, b) => b[1] - a[1]);
+for (const [mod, count] of sortedMods) {
 const li = document.createElement("li");
 
 const modText = document.createElement("span");
@@ -351,6 +466,105 @@ list.appendChild(li);
 }
 }
 
+function drawHitChart(mod) {
+  if (!mod || hitAttempts.length === 0 || hitAttempts.every(h => h.mod !== mod)) {
+    document.getElementById("lastHitCount").textContent = "–";
+    document.getElementById("averageHitCount").textContent = "–";
+
+    if (window.hitChartInstance) {
+      window.hitChartInstance.destroy();
+      window.hitChartInstance = null;
+    }
+
+    const ctx = document.getElementById('hitChart').getContext('2d');
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    return;
+  }
+  const filteredHits = hitAttempts.filter(h => h.mod === mod);
+  const last = filteredHits.length ? filteredHits[filteredHits.length - 1].attempts : 0;
+  const avg = filteredHits.length
+    ? filteredHits.reduce((sum, h) => sum + h.attempts, 0) / filteredHits.length
+    : 0;
+
+  document.getElementById("lastHitCount").textContent = filteredHits.length ? last : "–";
+  document.getElementById("averageHitCount").textContent = filteredHits.length ? avg.toFixed(2) : "–";
+
+  const ctx = document.getElementById('hitChart').getContext('2d');
+  if (window.hitChartInstance) {
+    window.hitChartInstance.destroy();
+  }
+  Chart.register(window['chartjs-plugin-annotation']);
+  window.hitChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: filteredHits.map((_, i) => i + 1),
+      datasets: [{
+        label: `Attempts before "${mod}" hit`,
+        data: filteredHits.map(h => h.attempts),
+        borderColor: 'gold',
+        backgroundColor: 'rgba(255, 215, 0, 0.3)',
+        borderWidth: 2,
+        tension: 0.2,
+        pointRadius: 5,
+        pointBackgroundColor: '#ffcc00'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#ffe599' } },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const attempts = context.raw;
+              const index = context.dataIndex + 1;
+              return `(${attempts}) attempts)`;
+            }
+          }
+        },
+        annotation: {
+          annotations: {
+            averageLine: {
+              type: 'line',
+              yMin: avg,
+              yMax: avg,
+              borderColor: '#ff69b4',
+              borderWidth: 2,
+              borderDash: [6, 6],
+              label: {
+                display: true,
+                content: `Avg: ${avg.toFixed(2)}`,
+                color: '#ffb6d1',
+                backgroundColor: '#2e1c07',
+                font: {
+                  weight: 'bold'
+                },
+                position: 'start'
+              }
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Attempts' },
+          ticks: { color: '#ffd28a' }
+        },
+        x: {
+          title: { display: true, text: 'Hit # (chronological)' },
+          ticks: { color: '#ffd28a' }
+        }
+      }
+    }
+        
+  });
+}
+
+function drawHitChartFromSelector() {
+  const selectedMod = document.getElementById("chartModSelect").value;
+  drawHitChart(selectedMod);
+}
 
 
 function launchFireworks(count = 15) {
@@ -448,6 +662,7 @@ spawnCandies();
 setInterval(() => spawnCandies(8), 2500);
 updateDesiredMods();
 toggleDesiredModSelect();
+populateChartModSelect();
 });
 
 
@@ -466,3 +681,58 @@ window.addEventListener('resize', () => {
     document.querySelector('.sidebar').classList.remove('open');
   }
 });
+
+
+function switchTab(tab) {
+  document.getElementById("gemTab").style.display = tab === "gem" ? "block" : "none";
+  document.getElementById("chartsTab").style.display = tab === "charts" ? "block" : "none";
+
+  document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+  document.querySelector(`.tab-button[onclick="switchTab('${tab}')"]`).classList.add("active");
+
+  if (tab === "charts" && hitAttempts.length > 0) {
+    const selectedMod = document.getElementById("chartModSelect");
+    if (selectedMod && selectedMod.value) {
+      drawHitChart(selectedMod.value);
+    }    
+  }  
+}
+function openMultipleGems() {
+  const countInput = document.getElementById("multiOpenCount");
+  const count = parseInt(countInput.value);
+
+  if (!count || count <= 0 || count > 100) {
+    alert("Please enter a valid number between 1 and 100.");
+    return;
+  }
+
+  const openBtn = document.querySelector("button[onclick='openGem()']");
+  const multiOpenBtn = document.querySelector("button[onclick='openMultipleGems()']");
+
+  openBtn.classList.add("cooldown");
+  multiOpenBtn.classList.add("cooldown");
+
+  const originalText = multiOpenBtn.textContent;
+  multiOpenBtn.textContent = "Cooldown...";
+
+  let opened = 0;
+
+  function openNext() {
+    if (opened >= count || stopOpening) {
+      multiOpenBtn.textContent = originalText;
+      multiOpenBtn.classList.remove("cooldown");
+      openBtn.classList.remove("cooldown");
+      return;
+    }
+
+    openGem(true);
+    opened++;
+
+    setTimeout(openNext, 30);
+  }
+
+  openNext();
+}
+
+
+

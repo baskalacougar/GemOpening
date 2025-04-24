@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0/dist/chartjs-plugin-annotation.min.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Cascadia+Mono&display=swap" rel="stylesheet">
   <meta charset="UTF-8">
@@ -18,18 +20,23 @@
   </div>
 
   <h1>💎 Opening Gems with <a href="https://guildstats.eu/character?nick=baska%20la%20cougar" target="_blank" class="baska-link">Baska La Cougar</a> 💎</h1>
-
-  <div class="main-container">
+  <div class="tabs">
+    <button class="tab-button active" onclick="switchTab('gem')">💎 Gem Opening</button>
+    <button class="tab-button" onclick="switchTab('charts')">📊 Charts</button>
+  </div>  
+  <div id="gemTab" class="tab-content" style="display: block;">
+    <div class="main-container">
     <div class="left-panel">
       <div>
         <br><label for="profesja">Select vocation:</label><br>
-        <select id="profesja" onchange="updateDesiredMods()">
-          <option>Knight</option>
+        <select id="profesja" onchange="updateDesiredMods(); populateChartModSelect()">
+          <option selected>Knight</option>
           <option>Sorcerer</option>
           <option>Druid</option>
           <option>Paladin</option>
           <option>Monk</option>
-        </select><br>
+        </select>
+        <br>
 
         <label>Select gem size / price / Tibia Coins value on your server:</label><br>
         <div style="display: flex; align-items: center; gap: 10px; justify-content: center; flex-wrap: wrap;">
@@ -52,6 +59,15 @@
         </div>
 
         <button onclick="openGem()">Open Gem 💥</button>
+        <div style="margin-top: 10px;">
+          <label for="multiOpenCount" style="font-size: 14px;">Or open multiple gems at once:</label><br>
+          <small style="color: #999;">Note: If you open more than needed to reveal one (e.g. open multiple - e.g. 125)</small>
+          <small style="color: #999;">and it was revealed at the 26th attempt</small>
+          <small style="color: #999;">then on this attempt it stopped at 26 opened gemes</small><br>
+          <input type="number" id="multiOpenCount" placeholder="max 100" min="1" max="100" step="1" style="width: 100px; padding: 5px; border-radius: 8px; margin-right: 5px;">
+          <button onclick="openMultipleGems()">Open multiple</button>
+        </div>        
+        <button onclick="resetStats()">🔁 Reset stats</button>
       </div>
 
       <div class="output" id="lossDisplay">
@@ -69,7 +85,7 @@
         <p class="centered-text">Try your luck!</p>
       </div>      
     </div>
-
+  
     <div class="right-panel">
       <div class="output" id="historyBox">
         <p><span class='label'>Opening history (Mod 3):</span></p>
@@ -77,6 +93,7 @@
       </div>
     </div>
   </div>
+</div>
 
   <div id="modal" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
     <div style="background: #1c0e03; border: 2px solid gold; padding: 30px; border-radius: 20px; text-align: center; color: #ffe599; box-shadow: 0 0 30px gold;">
@@ -88,7 +105,18 @@
       </div>
     </div>
   </div>
-
+  <div id="chartsTab" class="tab-content" style="display: none;">
+    <div class="output" style="max-width: 800px; margin: auto;">
+      <h2>📊 RNG Stats</h2>
+      <label for="chartModSelect"><strong>Select mod to analyze:</strong></label><br>
+<select id="chartModSelect" onchange="drawHitChartFromSelector()" style="margin-bottom: 20px; padding: 5px 10px; border-radius: 8px;"></select>
+      <p><strong>Last attempt:</strong> <span id="lastHitCount">–</span></p>
+      <p><strong>Average attempts per hit:</strong> <span id="averageHitCount">–</span></p>
+      <canvas id="hitChart" width="600" height="300" style="margin-top: 30px;"></canvas>
+    </div>
+  </div>
+  
+   
   <div id="candies"></div>
   <script src="gem.js"></script>
 </body>
