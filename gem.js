@@ -684,6 +684,23 @@ simulateBtn.addEventListener("click", () => {
     simulateBtn.textContent = originalText;
   }, 50);
 });
+const resetBtn = document.getElementById("resetPerfectChartBtn");
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    perfectSimResults = [];
+    document.getElementById("overallAttempts").textContent = "–";
+    document.getElementById("minAttempt").textContent = "–";
+    document.getElementById("maxAttempt").textContent = "–";
+
+    if (window.perfectChartInstance) {
+      window.perfectChartInstance.destroy();
+      window.perfectChartInstance = null;
+    }
+
+    const ctx = document.getElementById("perfectHitChart")?.getContext("2d");
+    if (ctx) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  });
+}
 document.getElementById("resetPerfectChartBtn").addEventListener("click", () => {
   perfectSimResults = [];
 
