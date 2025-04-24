@@ -458,3 +458,8 @@ document.querySelectorAll('.sidebar a').forEach(link => {
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
 }
+window.addEventListener('resize', () => {
+  if (window.innerWidth < 1600) {
+    document.querySelector('.sidebar').classList.remove('open');
+  }
+});

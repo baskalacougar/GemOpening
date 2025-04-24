@@ -90,6 +90,12 @@
       spawnHearts();
       setInterval(() => spawnHearts(10), 2500);
     });
+    window.addEventListener('resize', () => {
+  if (window.innerWidth < 1600) {
+    document.querySelector('.sidebar').classList.remove('open');
+  }
+});
+
   </script>
 </body>
 </html>

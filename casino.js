@@ -143,12 +143,17 @@ document.getElementById('bjStartBtn').addEventListener('click', () => {
 
 document.getElementById('bjHitBtn').addEventListener('click', () => {
   if (!window.bjStake) return;
+
   const pRoll = Math.floor(Math.random() * 6) + 1;
-  const dRoll = Math.floor(Math.random() * 6) + 1;
   playerSum += pRoll;
-  dealerSum += dRoll;
   document.getElementById('playerSum').textContent = playerSum;
+
+  if (dealerSum < 18) {
+    const dRoll = Math.floor(Math.random() * 6) + 1;
+    dealerSum += dRoll;
+  }
   document.getElementById('dealerSum').textContent = dealerSum;
+
   if (playerSum > 21) {
     balance -= window.bjStake;
     updateBalance();
@@ -160,44 +165,40 @@ document.getElementById('bjHitBtn').addEventListener('click', () => {
     const profit = window.bjStake;
     balance += profit;
     updateBalance();
-    updateLastResult(true, dRoll, profit, 'blackjack');
+    updateLastResult(true, dealerSum, profit, 'blackjack');
     addHistory(`BJ: dealer busted ${dealerSum}, won ${profit} GP`);
     document.getElementById('bjGameArea').style.display = 'none';
     window.bjStake = 0;
   }
 });
 
+
 document.getElementById('bjStandBtn').addEventListener('click', () => {
   if (!window.bjStake) return;
 
-  while (dealerSum < 17) {
-    const dRoll = Math.floor(Math.random() * 6) + 1;
-    dealerSum += dRoll;
+  while (dealerSum < 18) {
+    dealerSum += Math.floor(Math.random() * 6) + 1;
   }
-
   document.getElementById('dealerSum').textContent = dealerSum;
 
-  if (playerSum > 21) {
-    balance -= window.bjStake;
-    updateBalance();
-    updateLastResult(false, null, window.bjStake, 'bj');
-    addHistory(`BJ: busted ${playerSum}, lost ${window.bjStake} GP`);
-  } else if (dealerSum > 21 || playerSum > dealerSum) {
+  let result = '';
+  if (dealerSum > 21 || playerSum > dealerSum) {
     const profit = window.bjStake;
     balance += profit;
     updateBalance();
-    updateLastResult(true, null, profit, 'bj');
-    addHistory(`BJ: stand ${playerSum} vs ${dealerSum}, won ${profit} GP`);
-  } else if (playerSum < dealerSum) {
+    result = `BJ: stood at ${playerSum}, dealer had ${dealerSum}, won ${profit} GP`;
+    updateLastResult(true, dealerSum, profit, 'blackjack');
+  } else if (dealerSum > playerSum) {
     balance -= window.bjStake;
     updateBalance();
-    updateLastResult(false, null, window.bjStake, 'bj');
-    addHistory(`BJ: stand ${playerSum} vs ${dealerSum}, lost ${window.bjStake} GP`);
+    result = `BJ: stood at ${playerSum}, dealer had ${dealerSum}, lost ${window.bjStake} GP`;
+    updateLastResult(false, dealerSum, window.bjStake, 'blackjack');
   } else {
-    document.getElementById('lastResult').textContent = `Push! Both at ${playerSum}.`;
-    addHistory(`BJ: push ${playerSum}`);
+    result = `BJ: draw! You and dealer both had ${playerSum}`;
+    updateLastResult(false, dealerSum, 0, 'blackjack');
   }
 
+  addHistory(result);
   document.getElementById('bjGameArea').style.display = 'none';
   window.bjStake = 0;
 });
@@ -253,3 +254,8 @@ document.querySelectorAll('.sidebar a').forEach(link => {
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
 }
+window.addEventListener('resize', () => {
+  if (window.innerWidth < 1600) {
+    document.querySelector('.sidebar').classList.remove('open');
+  }
+});
