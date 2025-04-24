@@ -459,7 +459,7 @@ function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
 }
 window.addEventListener('resize', () => {
-  if (window.innerWidth < 1600) {
+  if (window.innerWidth < 1800) {
     document.querySelector('.sidebar').classList.remove('open');
   }
 });

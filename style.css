@@ -338,7 +338,9 @@ button:hover {
   color: #ffd700;
   font-weight: bold;
 }
-
+#gameHistoryTitle {
+  color: #ffccff;
+}
 .win-result {
   background-color: rgba(0, 255, 0, 0.1);
   color: #8fff8f;
@@ -378,7 +380,7 @@ button:hover {
 }
 
 
-@media (max-width: 1600px) {
+@media (max-width: 1800px) {
   .sidebar {
     transform: translateX(-100%);
     transition: transform 0.4s ease;
