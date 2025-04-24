@@ -716,6 +716,7 @@ document.getElementById("resetPerfectChartBtn").addEventListener("click", () => 
   const ctx = document.getElementById("perfectHitChart")?.getContext("2d");
   if (ctx) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 });
+renderPerfectModInputs();
 });
 
 document.querySelectorAll('.sidebar a').forEach(link => {
